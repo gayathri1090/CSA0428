@@ -1,0 +1,47 @@
+// Input the number of disk requests
+printf("Enter the number of requests: ");
+scanf("%d", &n);
+
+// Input the disk requests
+printf("Enter the requests in the ready queue: ");
+for(i = 0; i < n; i++) {
+    scanf("%d", &requests[i]);
+}
+
+// Input the initial head position
+printf("Enter the initial head position: ");
+scanf("%d", &initial);
+
+// Input the size of the disk
+printf("Enter the size of the disk: ");
+scanf("%d", &size);
+
+// Sort the request array
+sort(requests, n);
+
+// Adding boundary values (0 and size-1) to the requests
+for(i = 0, j = 0; i < n; i++) {
+    if(requests[i] >= initial) {
+        temp[j++] = requests[i];
+    }
+}
+temp[j++] = size - 1;
+for(i = 0; i < n; i++) {
+    if(requests[i] < initial) {
+        temp[j++] = requests[i];
+    }
+}
+temp[j++] = 0;
+
+// Process the requests
+printf("Seek Sequence: ");
+for(i = 0; i < j; i++) {
+    printf("%d ", temp[i]);
+    TotalHeadMov += abs(temp[i] - initial);
+    initial = temp[i];
+}
+
+// Print the total head movement
+printf("\nTotal Head Movement = %d\n", TotalHeadMov);
+
+return 0;
