@@ -1,0 +1,99 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+void sort(int arr[], int n) {
+    int temp;
+    for(int i = 0; i < n-1; i++) {
+        for(int j = i+1; j < n; j++) {
+            if(arr[i] > arr[j]) {
+                temp = arr[i];
+                arr[i] = arr[j];
+                arr[j] = temp;
+            }
+        }
+    }
+}
+
+int main() {
+    int i, j, n, size, TotalHeadMov = 0, initial, direction;
+    int requests[100], temp[100];
+
+    // Input the number of disk requests
+    printf("Enter the number of requests: ");
+    scanf("%d", &n);
+
+    // Input the disk requests
+    printf("Enter the requests in the ready queue: ");
+    for(i = 0; i < n; i++) {
+        scanf("%d", &requests[i]);
+    }
+
+    // Input the initial head position
+    printf("Enter the initial head position: ");
+    scanf("%d", &initial);
+
+    // Input the size of the disk
+    printf("Enter the size of the disk: ");
+    scanf("%d", &size);
+
+    // Input the direction (0 for left, 1 for right)
+    printf("Enter the initial direction (0 for left, 1 for right): ");
+    scanf("%d", &direction);
+
+    // Sort the request array
+    sort(requests, n);
+
+    // Adding boundary values (0 and size-1) to the requests
+    for(i = 0, j = 0; i < n; i++) {
+        if(requests[i] < initial) {
+            temp[j++] = requests[i];
+        }
+    }
+    temp[j++] = 0;
+    temp[j++] = initial;
+    for(i = 0; i < n; i++) {
+        if(requests[i] > initial) {
+            temp[j++] = requests[i];
+        }
+    }
+    temp[j++] = size - 1;
+
+    // Process the requests based on the direction
+    int index = 0;
+    for(i = 0; i < j; i++) {
+        if(temp[i] == initial) {
+            index = i;
+            break;
+        }
+    }
+
+    printf("Seek Sequence: ");
+    if(direction == 1) { // Right
+        for(i = index; i < j; i++) {
+            printf("%d ", temp[i]);
+            TotalHeadMov += abs(temp[i] - initial);
+            initial = temp[i];
+        }
+        for(i = index - 1; i >= 0; i--) {
+            printf("%d ", temp[i]);
+            TotalHeadMov += abs(temp[i] - initial);
+            initial = temp[i];
+        }
+    } else { // Left
+        for(i = index; i >= 0; i--) {
+            printf("%d ", temp[i]);
+            TotalHeadMov += abs(temp[i] - initial);
+            initial = temp[i];
+        }
+        for(i = index + 1; i < j; i++) {
+            printf("%d ", temp[i]);
+            TotalHeadMov += abs(temp[i] - initial);
+            initial = temp[i];
+        }
+    }
+
+    // Print the total head movement
+    printf("\nTotal Head Movement = %d\n", TotalHeadMov);
+
+    return 0;
+}
