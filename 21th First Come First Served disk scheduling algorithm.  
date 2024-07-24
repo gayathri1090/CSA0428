@@ -1,0 +1,31 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+int main() {
+    int ReadyQueue[100], i, n, TotalHeadMov = 0, initial;
+
+    // Input the number of disk requests
+    printf("Enter the number of requests: ");
+    scanf("%d", &n);
+
+    // Input the disk requests
+    printf("Enter the requests in the ready queue: ");
+    for(i = 0; i < n; i++) {
+        scanf("%d", &ReadyQueue[i]);
+    }
+
+    // Input the initial head position
+    printf("Enter the initial head position: ");
+    scanf("%d", &initial);
+
+    // Calculate the total head movement
+    for(i = 0; i < n; i++) {
+        TotalHeadMov += abs(ReadyQueue[i] - initial);
+        initial = ReadyQueue[i];
+    }
+
+    // Print the total head movement
+    printf("Total Head Movement = %d\n", TotalHeadMov);
+
+    return 0;
+}
