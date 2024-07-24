@@ -1,0 +1,82 @@
+#include <stdio.h>
+
+#define NUM_RESOURCES 3
+#define NUM_PROCESSES 5
+
+// Structure to represent a process
+typedef struct {
+    int pid;
+    int need[NUM_RESOURCES];
+    int allocation[NUM_RESOURCES];
+} Process;
+
+// Function to calculate the need of a process
+void calculate_need(Process *p, int available[]) {
+    for (int i = 0; i < NUM_RESOURCES; i++) {
+        p->need[i] = p->allocation[i] - available[i];
+    }
+}
+
+// Function to check for safety
+int is_safe(Process *processes, int num_processes, int available[]) {
+    int work[NUM_RESOURCES];
+    for (int i = 0; i < NUM_RESOURCES; i++) {
+        work[i] = available[i];
+    }
+
+    int finish[num_processes];
+    for (int i = 0; i < num_processes; i++) {
+        finish[i] = 0;
+    }
+
+    int i = 0;
+    while (i < num_processes) {
+        int found = 0;
+        for (int j = 0; j < num_processes; j++) {
+            if (!finish[j]) {
+                int k;
+                for (k = 0; k < NUM_RESOURCES; k++) {
+                    if (processes[j].need[k] > work[k]) {
+                        break;
+                    }
+                }
+                if (k == NUM_RESOURCES) {
+                    for (k = 0; k < NUM_RESOURCES; k++) {
+                        work[k] += processes[j].allocation[k];
+                    }
+                    finish[j] = 1;
+                    found = 1;
+                }
+            }
+        }
+        if (!found) {
+            return 0; // Not safe
+        }
+        i++;
+    }
+    return 1; // Safe
+}
+
+int main() {
+    Process processes[NUM_PROCESSES] = {
+        {0, {0, 0, 0}, {0, 0, 0}},
+        {1, {7, 5, 3}, {0, 1, 0}},
+        {2, {3, 2, 2}, {2, 0, 0}},
+        {3, {9, 0, 2}, {3, 0, 2}},
+        {4, {2, 3, 3}, {2, 1, 1}},
+    };
+
+    int available[NUM_RESOURCES] = {3, 3, 2};
+
+    for (int i = 0; i < NUM_PROCESSES; i++) {
+        calculate_need(&processes[i], available);
+    }
+
+    if (is_safe(processes, NUM_PROCESSES, available)) {
+        printf("System is in a safe state.\n");
+    } else {
+        printf("System is not in a safe state.\n");
+    }
+
+    return 0;
+}
