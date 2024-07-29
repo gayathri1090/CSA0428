@@ -1,0 +1,104 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+// Define the maximum number of blocks and files
+#define MAX_BLOCKS 10
+#define MAX_FILES 5
+
+// Structure to represent a disk block
+typedef struct Block {
+    int blockNumber;
+    struct Block* next;
+} Block;
+
+// Structure to represent a file in the directory
+typedef struct File {
+    int fileNumber;
+    Block* firstBlock;
+    Block* lastBlock;
+} File;
+
+// Array to store files in the directory
+File directory[MAX_FILES];
+
+// Function to create a new block
+Block* createBlock(int blockNumber) {
+    Block* newBlock = (Block*)malloc(sizeof(Block));
+    if (newBlock == NULL) {
+        perror("Error allocating memory for block");
+        exit(EXIT_FAILURE);
+    }
+    newBlock->blockNumber = blockNumber;
+    newBlock->next = NULL;
+    return newBlock;
+}
+
+// Function to add a block to the file
+void addBlockToFile(File* file, int blockNumber) {
+    Block* newBlock = createBlock(blockNumber);
+    if (file->firstBlock == NULL) {
+        file->firstBlock = newBlock;
+        file->lastBlock = newBlock;
+    } else {
+        file->lastBlock->next = newBlock;
+        file->lastBlock = newBlock;
+    }
+}
+
+// Function to print the file allocation
+void printFileAllocation() {
+    printf("File Number\tBlocks\n");
+    for (int i = 0; i < MAX_FILES; i++) {
+        if (directory[i].firstBlock != NULL) {
+            printf("%d\t\t", directory[i].fileNumber);
+            Block* current = directory[i].firstBlock;
+            while (current != NULL) {
+                printf("%d ", current->blockNumber);
+                current = current->next;
+            }
+            printf("\n");
+        }
+    }
+}
+
+int main() {
+    int numFiles, numBlocks;
+    int fileIndex, blockNumber;
+
+    printf("Enter the number of files (max %d): ", MAX_FILES);
+    scanf("%d", &numFiles);
+
+    // Initialize the directory
+    for (int i = 0; i < MAX_FILES; i++) {
+        directory[i].fileNumber = i + 1;
+        directory[i].firstBlock = NULL;
+        directory[i].lastBlock = NULL;
+    }
+
+    // Allocate blocks to files
+    for (int i = 0; i < numFiles; i++) {
+        printf("Enter the number of blocks for file %d: ", i + 1);
+        scanf("%d", &numBlocks);
+
+        for (int j = 0; j < numBlocks; j++) {
+            printf("Enter block number %d for file %d: ", j + 1, i + 1);
+            scanf("%d", &blockNumber);
+            addBlockToFile(&directory[i], blockNumber);
+        }
+    }
+
+    // Print file allocation
+    printFileAllocation();
+
+    // Free allocated memory
+    for (int i = 0; i < MAX_FILES; i++) {
+        Block* current = directory[i].firstBlock;
+        while (current != NULL) {
+            Block* next = current->next;
+            free(current);
+            current = next;
+        }
+    }
+
+    return 0;
+}
