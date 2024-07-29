@@ -1,0 +1,101 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#define MAX_BLOCKS 100
+#define BLOCK_SIZE 512
+#define MAX_FILES 10
+
+typedef struct {
+    int indexBlock[MAX_BLOCKS];
+    int size;
+    char name[20];
+} File;
+
+File fileSystem[MAX_FILES];
+char storage[MAX_BLOCKS][BLOCK_SIZE];
+int blockUsed[MAX_BLOCKS] = {0};
+
+void initializeFileSystem() {
+    for (int i = 0; i < MAX_FILES; i++) {
+        fileSystem[i].size = 0;
+        fileSystem[i].name[0] = '\0';
+    }
+}
+
+int getFreeBlock() {
+    for (int i = 0; i < MAX_BLOCKS; i++) {
+        if (!blockUsed[i]) {
+            blockUsed[i] = 1;
+            return i;
+        }
+    }
+    return -1;
+}
+
+void createFile(char *name) {
+    for (int i = 0; i < MAX_FILES; i++) {
+        if (fileSystem[i].name[0] == '\0') {
+            strcpy(fileSystem[i].name, name);
+            fileSystem[i].size = 0;
+            printf("File '%s' created.\n", name);
+            return;
+        }
+    }
+    printf("No space to create more files.\n");
+}
+
+void writeFile(char *name, char *data) {
+    for (int i = 0; i < MAX_FILES; i++) {
+        if (strcmp(fileSystem[i].name, name) == 0) {
+            int dataLength = strlen(data);
+            int blocksNeeded = (dataLength / BLOCK_SIZE) + (dataLength % BLOCK_SIZE != 0);
+
+            if (blocksNeeded > (MAX_BLOCKS - fileSystem[i].size)) {
+                printf("Not enough space to write data.\n");
+                return;
+            }
+
+            for (int j = 0; j < blocksNeeded; j++) {
+                int blockIndex = getFreeBlock();
+                if (blockIndex == -1) {
+                    printf("No more free blocks available.\n");
+                    return;
+                }
+                fileSystem[i].indexBlock[fileSystem[i].size++] = blockIndex;
+                strncpy(storage[blockIndex], data + (j * BLOCK_SIZE), BLOCK_SIZE);
+            }
+            printf("Data written to file '%s'.\n", name);
+            return;
+        }
+    }
+    printf("File '%s' not found.\n", name);
+}
+
+void readFile(char *name) {
+    for (int i = 0; i < MAX_FILES; i++) {
+        if (strcmp(fileSystem[i].name, name) == 0) {
+            printf("Reading file '%s':\n", name);
+            for (int j = 0; j < fileSystem[i].size; j++) {
+                printf("%s", storage[fileSystem[i].indexBlock[j]]);
+            }
+            printf("\n");
+            return;
+        }
+    }
+    printf("File '%s' not found.\n", name);
+}
+
+int main() {
+    initializeFileSystem();
+
+    createFile("file1");
+    writeFile("file1", "Hello, this is a test data for file1.");
+    readFile("file1");
+
+    createFile("file2");
+    writeFile("file2", "This is another file with more data.");
+    readFile("file2");
+
+    return 0;
+}
