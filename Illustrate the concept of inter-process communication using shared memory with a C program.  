@@ -1,0 +1,44 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <fcntl.h>
+#include <sys/mman.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#include <string.h>
+
+#define SHARED_MEMORY_NAME "/my_shared_memory"
+#define SHARED_MEMORY_SIZE 1024
+
+int main() {
+    // Create and open a shared memory object
+    int shm_fd = shm_open(SHARED_MEMORY_NAME, O_CREAT | O_RDWR, 0666);
+    if (shm_fd == -1) {
+        perror("shm_open");
+        exit(EXIT_FAILURE);
+    }
+
+    // Set the size of the shared memory object
+    if (ftruncate(shm_fd, SHARED_MEMORY_SIZE) == -1) {
+        perror("ftruncate");
+        exit(EXIT_FAILURE);
+    }
+
+    // Map the shared memory object into the address space
+    void *shared_memory = mmap(NULL, SHARED_MEMORY_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, shm_fd, 0);
+    if (shared_memory == MAP_FAILED) {
+        perror("mmap");
+        exit(EXIT_FAILURE);
+    }
+
+    // Write data to the shared memory
+    const char *message = "Hello from the writer process!";
+    strncpy(shared_memory, message, SHARED_MEMORY_SIZE);
+
+    printf("Writer: Wrote message to shared memory: %s\n", message);
+
+    // Clean up
+    munmap(shared_memory, SHARED_MEMORY_SIZE);
+    close(shm_fd);
+
+    return 0;
+}
