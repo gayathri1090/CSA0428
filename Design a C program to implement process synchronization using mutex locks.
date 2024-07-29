@@ -1,0 +1,95 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <pthread.h>
+#include <unistd.h>
+
+#define BUFFER_SIZE 10
+#define NUM_PRODUCERS 3
+#define NUM_CONSUMERS 3
+
+int buffer[BUFFER_SIZE];
+int count = 0;  // Number of items in the buffer
+int in = 0;     // Index for the next produced item
+int out = 0;    // Index for the next consumed item
+
+pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_cond_t not_empty = PTHREAD_COND_INITIALIZER;
+pthread_cond_t not_full = PTHREAD_COND_INITIALIZER;
+
+void* producer(void* arg) {
+    int id = *((int*) arg);
+    free(arg);
+
+    while (1) {
+        int item = rand() % 100; // Produce an item
+
+        pthread_mutex_lock(&mutex);
+
+        while (count == BUFFER_SIZE) {
+            pthread_cond_wait(&not_full, &mutex);  // Wait if the buffer is full
+        }
+
+        buffer[in] = item;
+        printf("Producer %d produced %d\n", id, item);
+        in = (in + 1) % BUFFER_SIZE;
+        count++;
+
+        pthread_cond_signal(&not_empty);  // Signal that the buffer is not empty
+        pthread_mutex_unlock(&mutex);
+
+        sleep(rand() % 2);  // Simulate production time
+    }
+}
+
+void* consumer(void* arg) {
+    int id = *((int*) arg);
+    free(arg);
+
+    while (1) {
+        pthread_mutex_lock(&mutex);
+
+        while (count == 0) {
+            pthread_cond_wait(&not_empty, &mutex);  // Wait if the buffer is empty
+        }
+
+        int item = buffer[out];
+        printf("Consumer %d consumed %d\n", id, item);
+        out = (out + 1) % BUFFER_SIZE;
+        count--;
+
+        pthread_cond_signal(&not_full);  // Signal that the buffer is not full
+        pthread_mutex_unlock(&mutex);
+
+        sleep(rand() % 2);  // Simulate consumption time
+    }
+}
+
+int main() {
+    pthread_t producers[NUM_PRODUCERS], consumers[NUM_CONSUMERS];
+
+    for (int i = 0; i < NUM_PRODUCERS; i++) {
+        int* id = malloc(sizeof(int));
+        *id = i + 1;
+        pthread_create(&producers[i], NULL, producer, id);
+    }
+
+    for (int i = 0; i < NUM_CONSUMERS; i++) {
+        int* id = malloc(sizeof(int));
+        *id = i + 1;
+        pthread_create(&consumers[i], NULL, consumer, id);
+    }
+
+    for (int i = 0; i < NUM_PRODUCERS; i++) {
+        pthread_join(producers[i], NULL);
+    }
+
+    for (int i = 0; i < NUM_CONSUMERS; i++) {
+        pthread_join(consumers[i], NULL);
+    }
+
+    pthread_mutex_destroy(&mutex);
+    pthread_cond_destroy(&not_empty);
+    pthread_cond_destroy(&not_full);
+
+    return 0;
+}
